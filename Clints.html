@@ -1,0 +1,1563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Etherealneel Trading Journal</title>
+    
+    <!-- Dynamic Favicon -->
+    <link id="appFavicon" rel="icon" type="image/png" href="https://lh3.googleusercontent.com/d/1ZCxZhyVpI3v7aowCeinf84xB1jnzXLkl">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        wp: {
+                            blue: '#2271b1',
+                            blueHover: '#135e96',
+                            bg: '#f0f0f1',
+                            card: '#ffffff',
+                            border: '#c3c4c7',
+                            text: '#1d2327',
+                            textMuted: '#50575e'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'Oxygen-Sans', 'Ubuntu', 'Cantarell', '"Helvetica Neue"', 'sans-serif'],
+                        mono: ['Consolas', 'Monaco', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Font Awesome 6 Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            background-color: #f0f0f1;
+            color: #1d2327;
+        }
+
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        ::-webkit-scrollbar {
+            width: 3px;
+            height: 3px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f0f0f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2271b1;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #135e96;
+        }
+        
+        .wp-box {
+            background: #ffffff;
+            border: 1px solid #c3c4c7;
+            box-shadow: 0 1px 1px rgba(0,0,0,.04);
+        }
+
+        .wp-button-primary {
+            background: #2271b1;
+            border-color: #2271b1;
+            color: #fff;
+            transition: all 0.1s ease;
+        }
+        .wp-button-primary:hover {
+            background: #135e96;
+            border-color: #135e96;
+            color: #fff;
+        }
+
+        .wp-button-secondary {
+            background: #f6f7f7;
+            border: 1px solid #2271b1;
+            color: #2271b1;
+        }
+        .wp-button-secondary:hover {
+            background: #f0f0f1;
+            border-color: #0a4b78;
+            color: #0a4b78;
+        }
+
+        .wp-input {
+            border: 1px solid #8c8f94;
+            border-radius: 4px;
+            padding: 5px 8px;
+            background-color: #fff;
+            color: #2c3338;
+        }
+        .wp-input:focus {
+            border-color: #2271b1;
+            box-shadow: 0 0 0 1px #2271b1;
+            outline: 2px solid transparent;
+        }
+
+        th {
+            font-weight: 600;
+            color: #2c3338;
+            border-bottom: 1px solid #c3c4c7;
+            background-color: #f6f7f7;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .animate-toast {
+            animation: slideDown 0.2s ease forwards;
+        }
+    </style>
+</head>
+<body class="min-h-screen lg:h-screen flex flex-col font-sans antialiased hide-scrollbar overflow-x-hidden">
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="fixed top-4 right-4 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+    <header class="bg-white border-b border-[#c3c4c7] sticky top-0 z-30 shadow-sm flex-shrink-0">
+        <div class="w-full px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-4">
+            
+            <!-- Logo & Brand Title -->
+            <div class="flex items-center space-x-3">
+                <img src="https://lh3.googleusercontent.com/d/1ZCxZhyVpI3v7aowCeinf84xB1jnzXLkl" 
+                     alt="Etherealneel Logo" 
+                     class="w-9 h-9 rounded object-cover border border-[#c3c4c7] shadow-sm"
+                     onerror="this.onerror=null; this.src='https://placehold.co/36x36/2271b1/ffffff?text=E';">
+                <div>
+                    <h1 class="text-lg font-bold text-[#1d2327] leading-tight flex items-center gap-2">
+                        <span>Etherealneel Trading Journal</span>
+                    </h1>
+                    <p class="text-xs text-[#50575e] flex items-center gap-2">
+                        <span>Swapneel Das</span>
+                        <span id="cloudStatusBadge" class="inline-flex items-center gap-1 text-[11px] font-medium text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
+                            <i class="fa-solid fa-cloud"></i> Local Mode
+                        </span>
+                        
+                    </p>
+                </div>
+            </div>
+
+            <!-- Page Navigation Tabs & Toolbar -->
+            <div class="flex items-center gap-2 flex-wrap text-xs">
+                
+                <div class="flex items-center bg-[#f0f0f1] p-1 rounded border border-[#c3c4c7] mr-2">
+                    <button id="navTabDashboard" onclick="switchView('dashboard')" class="px-3 py-1.5 rounded font-bold transition-all bg-white text-[#2271b1] shadow-sm">
+                        <i class="fa-solid fa-gauge-high mr-1"></i> Dashboard
+                    </button>
+                    <button id="navTabTrades" onclick="switchView('trades')" class="px-3 py-1.5 rounded font-bold transition-all text-[#50575e] hover:text-[#1d2327]">
+                        <i class="fa-solid fa-list-check mr-1"></i> Trade Logs
+                    </button>
+                </div>
+
+                <!-- Export Actions Only -->
+               
+            </div>
+
+        </div>
+    </header>
+
+    <main class="w-full px-4 sm:px-6 lg:px-8 py-4 space-y-4 flex-grow flex flex-col min-h-0 overflow-y-auto lg:overflow-hidden">
+        
+        <!-- PAGE 1: DASHBOARD VIEW -->
+        <div id="viewDashboard" class="space-y-4 flex-grow flex flex-col min-h-0">
+            
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 flex-shrink-0">
+                
+                <div class="wp-box p-3.5 rounded">
+                    <div class="flex items-center justify-between text-xs text-[#50575e] mb-1">
+                        <span class="font-bold">Equity</span>
+                    </div>
+                    <div id="statEquity" class="text-xl font-bold font-mono text-[#1d2327]">$1,000.00</div>
+                    <div class="mt-1 pt-1 border-t border-[#f0f0f1] text-[11px] text-[#50575e] flex justify-between">
+                        <span>Initial: <strong id="statStartBalance">$1,000.00</strong></span>
+                    </div>
+                </div>
+
+                <div class="wp-box p-3.5 rounded">
+                    <div class="text-xs text-[#50575e] font-bold mb-1">Net P&L</div>
+                    <div id="statNetProfitSub" class="text-xl font-bold font-mono text-[#1d2327]">$0.00</div>
+                    <div class="mt-1 pt-1 border-t border-[#f0f0f1] text-[11px] text-[#50575e]">
+                        Return: <strong id="statReturnBadge">+0.00%</strong>
+                    </div>
+                </div>
+
+                <div class="wp-box p-3.5 rounded">
+                    <div class="flex items-center justify-between text-xs text-[#50575e] font-bold mb-1">
+                        <span>Withdrawals</span>
+                    </div>
+                    <div id="statTotalWithdrawals" class="text-xl font-bold font-mono text-blue-700">$0.00</div>
+                    <div id="statWithdrawalCount" onclick="openWithdrawListModal()" class="mt-1 pt-1 border-t border-[#f0f0f1] text-[11px] text-[#50575e] cursor-pointer hover:text-[#2271b1]">
+                        0 Withdrawals
+                    </div>
+                </div>
+
+                <div class="wp-box p-3.5 rounded">
+                    <div class="text-xs text-[#50575e] font-bold mb-1">Win Rate</div>
+                    <div id="statWinRate" class="text-xl font-bold font-mono text-emerald-700">0.0%</div>
+                    <div id="statWinLossRatio" class="mt-1 pt-1 border-t border-[#f0f0f1] text-[11px] text-[#50575e]">
+                        0 W / 0 L
+                    </div>
+                </div>
+
+                <div class="wp-box p-3.5 rounded">
+                    <div class="text-xs text-[#50575e] font-bold mb-1">Profit Factor</div>
+                    <div id="statProfitFactor" class="text-xl font-bold font-mono text-[#1d2327]">0.00</div>
+                    <div id="statExpectancy" class="mt-1 pt-1 border-t border-[#f0f0f1] text-[11px] text-[#50575e]">
+                        Exp: $0.00
+                    </div>
+                </div>
+
+                <div class="wp-box p-3.5 rounded">
+                    <div class="text-xs text-[#50575e] font-bold mb-1">Total Trades</div>
+                    <div id="statTotalTrades" class="text-xl font-bold font-mono text-[#1d2327]">0</div>
+                    <div id="statBECount" class="mt-1 pt-1 border-t border-[#f0f0f1] text-[11px] text-[#50575e]">
+                        0 Break-Even
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-grow min-h-0">
+                
+                <div class="wp-box p-4 rounded lg:col-span-8 flex flex-col justify-between h-full min-h-[340px]">
+                    <div class="flex items-center justify-between mb-2 flex-shrink-0">
+                        <h2 class="text-sm font-bold text-[#1d2327] flex items-center gap-2">
+                            <i class="fa-solid fa-chart-line text-[#2271b1]"></i>
+                            Equity Growth Curve
+                        </h2>
+                        <div class="flex items-center space-x-1 text-xs">
+                            <button id="btnChartModeEquity" onclick="setEquityChartMode('equity')" class="px-2.5 py-1 rounded bg-[#2271b1] text-white font-bold">Account Equity</button>
+                            <button id="btnChartModePnL" onclick="setEquityChartMode('pnl')" class="px-2.5 py-1 rounded bg-[#f6f7f7] text-[#2c3338] border border-[#c3c4c7]">Trading P&L</button>
+                        </div>
+                    </div>
+
+                    <div class="relative w-full flex-grow min-h-0 py-2">
+                        <canvas id="equityChart"></canvas>
+                    </div>
+
+                    <div class="pt-2 border-t border-[#f0f0f1] flex items-center justify-between text-xs text-[#50575e] flex-shrink-0">
+                        <div class="flex gap-4">
+                            <span>Peak: <strong id="statPeakEquity" class="text-[#1d2327]">$1,000.00</strong></span>
+                            <span>Max Drawdown: <strong id="statMaxDDVal" class="text-rose-600">0.00%</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="wp-box p-4 rounded lg:col-span-4 flex flex-col justify-between h-full min-h-[340px]">
+                    <div class="flex items-center justify-between mb-2 flex-shrink-0">
+                        <h2 class="text-sm font-bold text-[#1d2327] flex items-center gap-2">
+                            <i class="fa-solid fa-chart-pie text-[#2271b1]"></i>
+                            Setup Models
+                        </h2>
+                    </div>
+
+                    <div class="relative w-full flex-grow min-h-0 py-2 flex items-center justify-center">
+                        <canvas id="strategyChart"></canvas>
+                    </div>
+
+                    <div class="pt-2 border-t border-[#f0f0f1] text-center text-xs text-[#50575e] flex-shrink-0">
+                        Top Model: <strong id="statTopStrategy" class="text-[#2271b1]">-</strong>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- PAGE 2: FULL TRADING LOG PAGE -->
+        <div id="viewAllTrades" class="hidden space-y-3 flex-grow flex flex-col min-h-0 h-full">
+            
+            <div class="flex items-center justify-between flex-wrap gap-2 flex-shrink-0">
+                <div class="flex items-center space-x-3">
+                    <button onclick="switchView('dashboard')" class="wp-button-secondary px-3 py-1 rounded text-xs font-bold flex items-center gap-1">
+                        <i class="fa-solid fa-arrow-left"></i>
+                        <span>Dashboard</span>
+                    </button>
+                    <div>
+                        <h2 class="text-base font-bold text-[#1d2327] leading-tight">Trading Executions Log</h2>
+                        <p class="text-xs text-[#50575e]">Full historical ledger of all trade executions with continuous scroll.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="wp-box rounded overflow-hidden shadow-sm flex-grow flex flex-col min-h-0">
+                
+                <div class="p-3 border-b border-[#c3c4c7] bg-[#f6f7f7] flex flex-wrap items-center justify-between gap-3 flex-shrink-0">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-filter text-[#2271b1]"></i>
+                        <span class="text-xs font-bold text-[#1d2327]">Search & Filter Logs</span>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2 text-xs">
+                        <input type="text" id="filterSearch" oninput="handleFilterChange()" placeholder="Search pair, note..." class="wp-input w-36 sm:w-44">
+
+                        <select id="filterStrategy" onchange="handleFilterChange()" class="wp-input">
+                            <option value="ALL">All Setups</option>
+                            <option value="TJL 1">TJL 1</option>
+                            <option value="TJL 2">TJL 2</option>
+                            <option value="QML">QML</option>
+                            <option value="SBR">SBR</option>
+                            <option value="RBS">RBS</option>
+                            <option value="CRT">CRT</option>
+                            <option value="LIQUIDITY SWEEP">LIQUIDITY SWEEP</option>
+                            <option value="SUPPLY & DEMAND">SUPPLY & DEMAND</option>
+                        </select>
+
+                        <select id="filterSession" onchange="handleFilterChange()" class="wp-input">
+                            <option value="ALL">All Sessions</option>
+                            <option value="Asian">Asian</option>
+                            <option value="London">London</option>
+                            <option value="New York">New York</option>
+                        </select>
+
+                        <select id="filterDirection" onchange="handleFilterChange()" class="wp-input">
+                            <option value="ALL">All Directions</option>
+                            <option value="BUY">BUY</option>
+                            <option value="SELL">SELL</option>
+                        </select>
+
+                        <select id="filterOutcome" onchange="handleFilterChange()" class="wp-input">
+                            <option value="ALL">All Outcomes</option>
+                            <option value="Win">Win</option>
+                            <option value="Loss">Loss</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="overflow-y-auto overflow-x-auto flex-grow min-h-0">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead class="sticky top-0 z-10 bg-[#f6f7f7] shadow-sm">
+                            <tr>
+                                <th class="py-2.5 px-3">Date / Time</th>
+                                <th class="py-2.5 px-3">Pair</th>
+                                <th class="py-2.5 px-3">Side</th>
+                                <th class="py-2.5 px-3">Session</th>
+                                <th class="py-2.5 px-3">Setup Model</th>
+                                <th class="py-2.5 px-3">Entry / SL / TP</th>
+                                <th class="py-2.5 px-3">Planned R:R</th>
+                                <th class="py-2.5 px-3">Risk</th>
+                                <th class="py-2.5 px-3">Comm.</th>
+                                <th class="py-2.5 px-3">Net P&L</th>
+                                <th class="py-2.5 px-3 text-center">Chart</th>
+                            </tr>
+                        </thead>
+                        <tbody id="allTradesTableBody" class="divide-y divide-[#c3c4c7] font-mono">
+                            <!-- JS Filtered Rows -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="emptyFullTableState" class="p-12 text-center text-[#50575e] hidden flex-grow flex flex-col justify-center items-center">
+                    <i class="fa-solid fa-folder-open text-3xl mb-2 text-[#8c8f94]"></i>
+                    <p class="text-sm font-bold text-[#1d2327]">No Trade Logs Found</p>
+                    <p class="text-xs mt-1">Try resetting filters or log a new trade.</p>
+                </div>
+
+                <div class="p-2.5 border-t border-[#c3c4c7] bg-[#f6f7f7] flex items-center justify-between flex-wrap gap-2 text-xs flex-shrink-0">
+                    <div id="paginationInfo" class="text-[#50575e] font-mono font-medium">
+                        Total: 0 trades logged
+                    </div>
+                    <div class="text-[11px] text-[#50575e]">
+                        Scroll table to view all records
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- MODAL 1: Log / Edit Trade -->
+    <div id="tradeModal" class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center hidden p-4">
+        <div class="wp-box bg-white shadow-2xl w-full max-w-xl rounded overflow-hidden">
+            <div class="px-5 py-3 border-b border-[#c3c4c7] bg-[#f6f7f7] flex items-center justify-between">
+                <h3 id="modalTitle" class="text-sm font-bold text-[#1d2327]">Log Trade Execution</h3>
+                <button onclick="closeTradeModal()" class="text-[#50575e] hover:text-[#1d2327]">
+                    <i class="fa-solid fa-xmark text-base"></i>
+                </button>
+            </div>
+
+            <form id="tradeForm" onsubmit="handleTradeSubmit(event)" class="p-5 space-y-4 text-xs">
+                <input type="hidden" id="tradeId">
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block font-bold text-[#2c3338] mb-1">Date & Time</label>
+                        <input type="datetime-local" id="tradeDateTime" required class="wp-input w-full">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-[#2c3338] mb-1">Pair</label>
+                        <select id="tradePair" required class="wp-input w-full">
+                            <option value="XAU/USD">XAU/USD</option>
+                            <option value="BTC/USD">BTC/USD</option>
+                            <option value="EUR/USD">EUR/USD</option>
+                            <option value="GBP/USD">GBP/USD</option>
+                            <option value="USD/JPY">USD/JPY</option>
+                            <option value="USD/CHF">USD/CHF</option>
+                            <option value="AUD/USD">AUD/USD</option>
+                            <option value="USD/CAD">USD/CAD</option>
+                            <option value="NZD/USD">NZD/USD</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-[#2c3338] mb-1">Session</label>
+                        <select id="tradeSession" required class="wp-input w-full">
+                            <option value="London">London</option>
+                            <option value="New York">New York</option>
+                            <option value="Asian">Asian</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block font-bold text-[#2c3338] mb-1">Direction</label>
+                        <select id="tradeDirection" required class="wp-input w-full">
+                            <option value="BUY">BUY</option>
+                            <option value="SELL">SELL</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-[#2c3338] mb-1">Setup Model</label>
+                        <select id="tradeStrategy" required class="wp-input w-full">
+                            <option value="TJL 1">TJL 1</option>
+                            <option value="TJL 2">TJL 2</option>
+                            <option value="QML">QML</option>
+                            <option value="SBR">SBR</option>
+                            <option value="RBS">RBS</option>
+                            <option value="CRT">CRT</option>
+                            <option value="LIQUIDITY SWEEP">LIQUIDITY SWEEP</option>
+                            <option value="SUPPLY & DEMAND">SUPPLY & DEMAND</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-[#2c3338] mb-1">Outcome</label>
+                        <select id="tradeOutcome" required onchange="calcFormMetrics()" class="wp-input w-full">
+                            <option value="Win">Win</option>
+                            <option value="Loss">Loss</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 bg-[#f6f7f7] p-3 border border-[#c3c4c7] rounded">
+                    <div>
+                        <label class="block text-[10px] font-bold text-[#50575e] mb-0.5">Entry Price</label>
+                        <input type="number" step="any" id="tradeEntry" oninput="calcFormMetrics()" placeholder="1.0850" class="wp-input w-full font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-[#50575e] mb-0.5">Stop Loss</label>
+                        <input type="number" step="any" id="tradeSL" oninput="calcFormMetrics()" placeholder="1.0830" class="wp-input w-full font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-[#50575e] mb-0.5">Target (TP)</label>
+                        <input type="number" step="any" id="tradeTP" oninput="calcFormMetrics()" placeholder="1.0910" class="wp-input w-full font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-[#50575e] mb-0.5">Risk ($)</label>
+                        <input type="number" step="any" id="tradeRisk" oninput="calcFormMetrics()" placeholder="100" class="wp-input w-full font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-[#50575e] mb-0.5">Comm. ($)</label>
+                        <input type="number" step="any" id="tradeCommission" oninput="calcFormMetrics()" placeholder="0.00" value="0" class="wp-input w-full font-mono">
+                    </div>
+                </div>
+
+                <div class="bg-blue-50 border border-blue-200 p-2.5 rounded text-center grid grid-cols-2 gap-2">
+                    <div>
+                        <div class="text-[10px] font-bold text-[#50575e]">Planned R:R</div>
+                        <div id="previewRR" class="text-base font-bold font-mono text-[#2271b1]">1 : 0.00</div>
+                    </div>
+                    <div>
+                        <div class="text-[10px] font-bold text-[#50575e]">Estimated Net P&L</div>
+                        <div id="previewPnL" class="text-base font-bold font-mono text-emerald-700">$0.00</div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-bold text-[#2c3338] mb-1">Execution Notes</label>
+                    <textarea id="tradeNotes" rows="2" placeholder="Market structure, setup confluence..." class="wp-input w-full"></textarea>
+                </div>
+
+                <div>
+                    <label class="block font-bold text-[#2c3338] mb-1">Chart Screenshot Link / File</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <input type="url" id="tradeChartUrl" placeholder="https://www.tradingview.com/x/..." class="wp-input w-full">
+                        <input type="file" id="tradeChartFile" accept="image/*" onchange="handleImageFileUpload(event)" class="text-xs text-[#50575e]">
+                    </div>
+                    <input type="hidden" id="tradeChartDataUrl">
+                </div>
+
+                <div class="pt-2 border-t border-[#c3c4c7] flex justify-end space-x-2">
+                    <button type="button" onclick="closeTradeModal()" class="wp-button-secondary px-4 py-1.5 rounded font-bold">Cancel</button>
+                    <button type="submit" class="wp-button-primary px-4 py-1.5 rounded font-bold">Save Trade</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: Record Withdrawal -->
+    <div id="withdrawModal" class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center hidden p-4">
+        <div class="wp-box bg-white shadow-2xl w-full max-w-sm rounded overflow-hidden">
+            <div class="px-5 py-3 border-b border-[#c3c4c7] bg-[#f6f7f7] flex items-center justify-between">
+                <h3 id="withdrawModalTitle" class="text-sm font-bold text-[#1d2327]">Record Withdrawal</h3>
+                <button onclick="closeWithdrawModal()" class="text-[#50575e] hover:text-[#1d2327]">
+                    <i class="fa-solid fa-xmark text-base"></i>
+                </button>
+            </div>
+            <form onsubmit="handleWithdrawSubmit(event)" class="p-5 space-y-3 text-xs">
+                <input type="hidden" id="withdrawId">
+                <div>
+                    <label class="block font-bold text-[#2c3338] mb-1">Date & Time</label>
+                    <input type="datetime-local" id="withdrawDateTime" required class="wp-input w-full">
+                </div>
+                <div>
+                    <label class="block font-bold text-[#2c3338] mb-1">Amount ($)</label>
+                    <input type="number" step="any" min="0.01" id="withdrawAmount" placeholder="e.g. 500.00" required class="wp-input w-full font-mono text-blue-700 font-bold">
+                </div>
+                <div>
+                    <label class="block font-bold text-[#2c3338] mb-1">Payout Note (Optional)</label>
+                    <input type="text" id="withdrawNote" placeholder="e.g. Binance Pay / Bank Wire" class="wp-input w-full">
+                </div>
+                <div class="pt-2 border-t border-[#c3c4c7] flex justify-end space-x-2">
+                    <button type="button" onclick="closeWithdrawModal()" class="wp-button-secondary px-3.5 py-1.5 rounded font-bold">Cancel</button>
+                    <button type="submit" class="wp-button-primary px-3.5 py-1.5 rounded font-bold">Record Payout</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 3: Withdrawal History List -->
+    <div id="withdrawListModal" class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center hidden p-4">
+    <!-- MODAL 3: Withdrawal History List (Read-Only) -->
+    <div id="withdrawListModal" class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center hidden p-4">
+        <div class="wp-box bg-white shadow-2xl w-full max-w-md rounded overflow-hidden max-h-[80vh] flex flex-col">
+            <div class="px-5 py-3 border-b border-[#c3c4c7] bg-[#f6f7f7] flex items-center justify-between">
+                <h3 class="text-sm font-bold text-[#1d2327] flex items-center gap-2">
+                    <i class="fa-solid fa-arrow-up-from-bracket text-[#2271b1]"></i> Withdrawal Log
+                </h3>
+                <button onclick="closeWithdrawListModal()" class="text-[#50575e] hover:text-[#1d2327]">
+                    <i class="fa-solid fa-xmark text-base"></i>
+                </button>
+            </div>
+            <div id="withdrawListContainer" class="p-4 overflow-y-auto space-y-2 flex-grow text-xs font-mono hide-scrollbar">
+                <!-- Withdrawal List Items -->
+            </div>
+            <div class="p-3 border-t border-[#c3c4c7] bg-[#f6f7f7] flex justify-end items-center text-xs">
+                <button onclick="closeWithdrawListModal()" class="wp-button-secondary px-3 py-1 rounded font-bold">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 4: Settings (Read-Only) -->
+    <div id="settingsModal" class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center hidden p-4">
+        <div class="wp-box bg-white shadow-2xl w-full max-w-md rounded overflow-hidden">
+            <div class="px-5 py-3 border-b border-[#c3c4c7] bg-[#f6f7f7] flex items-center justify-between">
+                <h3 class="text-sm font-bold text-[#1d2327]">Journal Information</h3>
+                <button onclick="closeSettingsModal()" class="text-[#50575e] hover:text-[#1d2327]">
+                    <i class="fa-solid fa-xmark text-base"></i>
+                </button>
+            </div>
+            <form onsubmit="event.preventDefault(); closeSettingsModal();" class="p-5 space-y-3 text-xs">
+                <div>
+                    <label class="block font-bold text-[#2c3338] mb-1">Starting Account Balance ($)</label>
+                    <input type="number" step="any" id="settingStartBalance" readonly disabled class="wp-input w-full font-mono font-bold bg-slate-100 cursor-not-allowed">
+                </div>
+
+                <div class="pt-2 border-t border-[#c3c4c7] flex justify-between items-center">
+                    <button type="button" onclick="pullFromCloud()" class="text-[#2271b1] hover:underline text-[11px] font-bold">
+                        <i class="fa-solid fa-cloud-arrow-down mr-1"></i> Refresh from Sheet
+                    </button>
+                    <div class="flex space-x-2">
+                        <button type="button" onclick="closeSettingsModal()" class="wp-button-secondary px-3.5 py-1.5 rounded font-bold">Close</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 5: Custom Confirmation Modal -->
+    <div id="confirmModal" class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center hidden p-4">
+        <div class="wp-box bg-white shadow-2xl w-full max-w-xs p-5 space-y-3 rounded text-xs">
+            <div class="flex items-center space-x-2 text-amber-600 font-bold">
+                <i id="confirmIcon" class="fa-solid fa-triangle-exclamation"></i>
+                <h4 id="confirmTitle" class="text-sm text-[#1d2327]">Confirmation</h4>
+            </div>
+            <p id="confirmMessage" class="text-[#50575e]">Are you sure you want to proceed?</p>
+            <div id="confirmInputContainer" class="hidden">
+                <input type="text" id="confirmInput" class="wp-input w-full">
+            </div>
+            <div class="flex justify-end space-x-2 pt-2 border-t border-[#f0f0f1]">
+                <button onclick="closeConfirmModal(false)" class="wp-button-secondary px-3 py-1 rounded font-bold">Cancel</button>
+                <button onclick="closeConfirmModal(true)" class="bg-rose-600 hover:bg-rose-700 text-white font-bold px-3 py-1 rounded">Proceed</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 6: Chart Screenshot Preview -->
+    <div id="chartPreviewModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center hidden p-4">
+        <div class="wp-box bg-white shadow-2xl w-full max-w-4xl rounded overflow-hidden">
+            <div class="px-4 py-2.5 border-b border-[#c3c4c7] bg-[#f6f7f7] flex items-center justify-between text-xs">
+                <span class="font-bold text-[#1d2327] flex items-center gap-1.5">
+                    <i class="fa-solid fa-image text-[#2271b1]"></i> Chart Screenshot Inspector
+                </span>
+                <button onclick="closeChartPreviewModal()" class="text-[#50575e] hover:text-[#1d2327]">
+                    <i class="fa-solid fa-xmark text-base"></i>
+                </button>
+            </div>
+            <div class="p-3 bg-[#f0f0f1] flex justify-center items-center overflow-auto max-h-[80vh] hide-scrollbar">
+                <img id="chartPreviewImage" src="" class="max-w-full max-h-[75vh] object-contain rounded border border-[#c3c4c7] shadow-sm" alt="Chart Preview">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let trades = JSON.parse(localStorage.getItem('etherealneel_trades')) || [];
+        let withdrawals = JSON.parse(localStorage.getItem('etherealneel_withdrawals')) || [];
+        let startingBalance = parseFloat(localStorage.getItem('etherealneel_start_balance')) || 1000.00;
+        let faviconUrl = localStorage.getItem('etherealneel_favicon_url') || 'https://lh3.googleusercontent.com/d/1ZCxZhyVpI3v7aowCeinf84xB1jnzXLkl';
+        let cloudAppUrl = localStorage.getItem('etherealneel_cloud_url') || 'https://script.google.com/macros/s/AKfycbxsN09gdYK_AEe0YHoE-bJRutMZXzcIL8bMrSdwUHFTBnqhGWqFOPa3DeECrDP83vrv/exec';
+        
+        let activeView = 'dashboard';
+        let chartMode = 'equity';
+
+        let equityChartInstance = null;
+        let strategyChartInstance = null;
+        let activeConfirmCallback = null;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            applySettings();
+            initCharts();
+            renderAll();
+            
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            const dateTimeElem = document.getElementById('tradeDateTime');
+            if (dateTimeElem) dateTimeElem.value = now.toISOString().slice(0, 16);
+
+            updateCloudBadgeStatus();
+            if (cloudAppUrl) {
+                pullFromCloud(true);
+            }
+        });
+
+        // VIEW NAVIGATION SWITCHER
+        function switchView(viewName) {
+            activeView = viewName;
+            const dashView = document.getElementById('viewDashboard');
+            const tradesView = document.getElementById('viewAllTrades');
+            const btnDash = document.getElementById('navTabDashboard');
+            const btnTrades = document.getElementById('navTabTrades');
+
+            if (viewName === 'trades') {
+                dashView.classList.add('hidden');
+                tradesView.classList.remove('hidden');
+                btnTrades.className = 'px-3 py-1.5 rounded font-bold transition-all bg-white text-[#2271b1] shadow-sm';
+                btnDash.className = 'px-3 py-1.5 rounded font-bold transition-all text-[#50575e] hover:text-[#1d2327]';
+                renderAllTradesPage();
+            } else {
+                tradesView.classList.add('hidden');
+                dashView.classList.remove('hidden');
+                btnDash.className = 'px-3 py-1.5 rounded font-bold transition-all bg-white text-[#2271b1] shadow-sm';
+                btnTrades.className = 'px-3 py-1.5 rounded font-bold transition-all text-[#50575e] hover:text-[#1d2327]';
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            
+            let badgeBg = 'bg-emerald-50 border-emerald-300 text-emerald-800';
+            if (type === 'error') badgeBg = 'bg-rose-50 border-rose-300 text-rose-800';
+            else if (type === 'info') badgeBg = 'bg-blue-50 border-blue-300 text-blue-800';
+
+            toast.className = `px-3.5 py-2 rounded shadow-md text-xs font-sans border pointer-events-auto animate-toast ${badgeBg}`;
+            toast.innerHTML = `<span class="font-bold">${message}</span>`;
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'all 0.2s ease';
+                setTimeout(() => toast.remove(), 200);
+            }, 2500);
+        }
+
+        function applySettings() {
+            document.getElementById('statStartBalance').textContent = formatCurrency(startingBalance);
+            if (faviconUrl) {
+                document.getElementById('appFavicon').href = faviconUrl;
+            }
+        }
+
+        function renderAll() {
+            updateMetrics();
+            updateCharts();
+            renderAllTradesPage();
+        }
+
+        function setEquityChartMode(mode) {
+            chartMode = mode;
+            const btnEq = document.getElementById('btnChartModeEquity');
+            const btnPnL = document.getElementById('btnChartModePnL');
+            
+            if (mode === 'equity') {
+                btnEq.className = 'px-2.5 py-1 rounded bg-[#2271b1] text-white font-bold';
+                btnPnL.className = 'px-2.5 py-1 rounded bg-[#f6f7f7] text-[#2c3338] border border-[#c3c4c7]';
+            } else {
+                btnPnL.className = 'px-2.5 py-1 rounded bg-[#2271b1] text-white font-bold';
+                btnEq.className = 'px-2.5 py-1 rounded bg-[#f6f7f7] text-[#2c3338] border border-[#c3c4c7]';
+            }
+            updateCharts();
+        }
+
+        function updateMetrics() {
+            let wins = 0, losses = 0, breakEvens = 0;
+            let grossWins = 0, grossLosses = 0;
+            let totalCommission = 0, totalNetPnL = 0;
+
+            trades.forEach(t => {
+                const comm = parseFloat(t.commission) || 0;
+                const pnl = parseFloat(t.pnl) || 0;
+                totalCommission += comm;
+                totalNetPnL += pnl;
+
+                if (t.outcome === 'Win') {
+                    wins++;
+                    grossWins += (pnl + comm);
+                } else if (t.outcome === 'Loss') {
+                    losses++;
+                    grossLosses += Math.abs(pnl - comm);
+                } else if (t.outcome === 'Break-Even') {
+                    breakEvens++;
+                }
+            });
+
+            let totalWithdrawals = 0;
+            withdrawals.forEach(w => totalWithdrawals += (parseFloat(w.amount) || 0));
+
+            const currentEquity = startingBalance + totalNetPnL - totalWithdrawals;
+            const returnPct = startingBalance > 0 ? (totalNetPnL / startingBalance) * 100 : 0;
+            const totalDecided = wins + losses;
+            const winRate = totalDecided > 0 ? (wins / totalDecided) * 100 : 0;
+            const profitFactor = grossLosses > 0 ? (grossWins / grossLosses) : (grossWins > 0 ? 99.99 : 0);
+            const expectancy = totalDecided > 0 ? (totalNetPnL / totalDecided) : 0;
+
+            document.getElementById('statEquity').textContent = formatCurrency(currentEquity);
+            const returnBadge = document.getElementById('statReturnBadge');
+            returnBadge.textContent = `${returnPct >= 0 ? '+' : ''}${returnPct.toFixed(2)}%`;
+            returnBadge.className = returnPct >= 0 ? 'text-emerald-700 font-bold' : 'text-rose-600 font-bold';
+
+            document.getElementById('statNetProfitSub').textContent = formatCurrency(totalNetPnL);
+            document.getElementById('statTotalWithdrawals').textContent = formatCurrency(totalWithdrawals);
+            document.getElementById('statWithdrawalCount').textContent = `${withdrawals.length} Withdrawal${withdrawals.length === 1 ? '' : 's'}`;
+
+            document.getElementById('statWinRate').textContent = `${winRate.toFixed(1)}%`;
+            document.getElementById('statWinLossRatio').textContent = `${wins} W / ${losses} L`;
+
+            document.getElementById('statProfitFactor').textContent = profitFactor.toFixed(2);
+            document.getElementById('statExpectancy').textContent = `Exp: ${expectancy >= 0 ? '+' : ''}${formatCurrency(expectancy)}`;
+
+            document.getElementById('statTotalTrades').textContent = trades.length;
+            document.getElementById('statBECount').textContent = `${breakEvens} Break-even`;
+        }
+
+        function initCharts() {
+            const ctxEquity = document.getElementById('equityChart')?.getContext('2d');
+            if (ctxEquity) {
+                equityChartInstance = new Chart(ctxEquity, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: 'Equity ($)',
+                            data: [],
+                            borderColor: '#2271b1',
+                            backgroundColor: 'rgba(34, 113, 177, 0.08)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.1,
+                            pointRadius: [],
+                            pointBackgroundColor: [],
+                            pointBorderColor: []
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { grid: { color: '#f0f0f1' }, ticks: { font: { size: 10 } } },
+                            y: { grid: { color: '#f0f0f1' }, ticks: { font: { size: 10 }, callback: val => '$' + val } }
+                        }
+                    }
+                });
+            }
+
+            const ctxStrat = document.getElementById('strategyChart')?.getContext('2d');
+            if (ctxStrat) {
+                strategyChartInstance = new Chart(ctxStrat, {
+                    type: 'doughnut',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            data: [],
+                            backgroundColor: ['#2271b1', '#10b981', '#8b5cf6', '#f59e0b', '#ec4899', '#06b6d4', '#6366f1', '#f43f5e'],
+                            borderWidth: 1,
+                            borderColor: '#ffffff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 10 } }
+                        }
+                    }
+                });
+            }
+        }
+
+        function updateCharts() {
+            if (!equityChartInstance || !strategyChartInstance) return;
+
+            let timelineEvents = [];
+            trades.filter(t => t.outcome !== 'Pending').forEach(t => {
+                timelineEvents.push({
+                    type: 'trade',
+                    datetime: t.datetime || new Date().toISOString(),
+                    pnl: parseFloat(t.pnl) || 0
+                });
+            });
+
+            if (chartMode === 'equity') {
+                withdrawals.forEach(w => {
+                    timelineEvents.push({
+                        type: 'withdrawal',
+                        datetime: w.datetime || new Date().toISOString(),
+                        amount: parseFloat(w.amount) || 0
+                    });
+                });
+            }
+
+            timelineEvents.sort((a, b) => new Date(a.datetime) - new Date(b.datetime));
+
+            let runningBalance = startingBalance;
+            let maxPeak = startingBalance;
+            let maxDrawdownPct = 0;
+
+            const labels = ['Start'];
+            const dataPoints = [startingBalance];
+            const pointRadii = [4];
+            const pointBgColors = ['#2271b1'];
+
+            timelineEvents.forEach((ev, idx) => {
+                if (ev.type === 'trade') {
+                    runningBalance += ev.pnl;
+                    labels.push(`#${idx + 1}`);
+                    pointRadii.push(4);
+                    pointBgColors.push(ev.pnl >= 0 ? '#10b981' : '#f43f5e');
+                } else if (ev.type === 'withdrawal') {
+                    runningBalance -= ev.amount;
+                    labels.push(`Payout`);
+                    pointRadii.push(5);
+                    pointBgColors.push('#1d4ed8');
+                }
+                dataPoints.push(runningBalance);
+
+                if (runningBalance > maxPeak) {
+                    maxPeak = runningBalance;
+                } else {
+                    const dd = ((maxPeak - runningBalance) / maxPeak) * 100;
+                    if (dd > maxDrawdownPct) maxDrawdownPct = dd;
+                }
+            });
+
+            document.getElementById('statPeakEquity').textContent = formatCurrency(maxPeak);
+            document.getElementById('statMaxDDVal').textContent = `${maxDrawdownPct.toFixed(2)}%`;
+
+            equityChartInstance.data.labels = labels;
+            equityChartInstance.data.datasets[0].data = dataPoints;
+            equityChartInstance.data.datasets[0].pointRadius = pointRadii;
+            equityChartInstance.data.datasets[0].pointBackgroundColor = pointBgColors;
+            equityChartInstance.update();
+
+            const stratCounts = {};
+            trades.forEach(t => {
+                const s = t.strategy || 'Other';
+                stratCounts[s] = (stratCounts[s] || 0) + 1;
+            });
+
+            const stratLabels = Object.keys(stratCounts);
+            const stratData = Object.values(stratCounts);
+
+            if (stratLabels.length === 0) {
+                strategyChartInstance.data.labels = ['No Executions'];
+                strategyChartInstance.data.datasets[0].data = [1];
+                strategyChartInstance.data.datasets[0].backgroundColor = ['#e2e8f0'];
+                document.getElementById('statTopStrategy').textContent = '-';
+            } else {
+                strategyChartInstance.data.labels = stratLabels;
+                strategyChartInstance.data.datasets[0].data = stratData;
+                strategyChartInstance.data.datasets[0].backgroundColor = ['#2271b1', '#10b981', '#8b5cf6', '#f59e0b', '#ec4899', '#06b6d4', '#6366f1', '#f43f5e'];
+                
+                const topStrat = Object.entries(stratCounts).reduce((a, b) => a[1] > b[1] ? a : b)[0];
+                document.getElementById('statTopStrategy').textContent = topStrat;
+            }
+            strategyChartInstance.update();
+        }
+
+        function getFilteredTrades() {
+            const searchVal = (document.getElementById('filterSearch')?.value || '').toLowerCase();
+            const stratVal = document.getElementById('filterStrategy')?.value || 'ALL';
+            const sessVal = document.getElementById('filterSession')?.value || 'ALL';
+            const dirVal = document.getElementById('filterDirection')?.value || 'ALL';
+            const outcomeVal = document.getElementById('filterOutcome')?.value || 'ALL';
+
+            return trades.filter(t => {
+                const matchesSearch = (t.pair || '').toLowerCase().includes(searchVal) || 
+                                      (t.strategy || '').toLowerCase().includes(searchVal) ||
+                                      (t.notes || '').toLowerCase().includes(searchVal);
+                const matchesStrat = stratVal === 'ALL' || t.strategy === stratVal;
+                const matchesSess = sessVal === 'ALL' || t.session === sessVal;
+                const matchesDir = dirVal === 'ALL' || t.direction === dirVal;
+                const matchesOutcome = outcomeVal === 'ALL' || t.outcome === outcomeVal;
+                return matchesSearch && matchesStrat && matchesSess && matchesDir && matchesOutcome;
+            }).sort((a, b) => new Date(b.datetime || 0) - new Date(a.datetime || 0));
+        }
+
+        function renderAllTradesPage() {
+            const tbody = document.getElementById('allTradesTableBody');
+            const emptyState = document.getElementById('emptyFullTableState');
+            if (!tbody) return;
+
+            const filtered = getFilteredTrades();
+            const totalItems = filtered.length;
+
+            if (totalItems === 0) {
+                tbody.innerHTML = '';
+                emptyState?.classList.remove('hidden');
+            } else {
+                emptyState?.classList.add('hidden');
+                tbody.innerHTML = filtered.map(t => generateTradeRowHTML(t)).join('');
+            }
+
+            const infoElem = document.getElementById('paginationInfo');
+            if (infoElem) {
+                infoElem.textContent = totalItems === 0 
+                    ? 'Total: 0 trades logged' 
+                    : `Total: ${totalItems} trade${totalItems === 1 ? '' : 's'} logged`;
+            }
+        }
+
+        function handleFilterChange() {
+            renderAllTradesPage();
+        }
+
+        function generateTradeRowHTML(t) {
+            const dateFormatted = t.datetime ? new Date(t.datetime).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-';
+            
+            let outcomeBadge = '';
+            if (t.outcome === 'Win') {
+                outcomeBadge = '<span class="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold text-[10px]">WIN</span>';
+            } else if (t.outcome === 'Loss') {
+                outcomeBadge = '<span class="px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 font-bold text-[10px]">LOSS</span>';
+            } else if (t.outcome === 'Break-Even') {
+                outcomeBadge = '<span class="px-1.5 py-0.5 rounded bg-gray-100 text-gray-800 font-bold text-[10px]">BE</span>';
+            }
+
+            const sideBadge = t.direction === 'BUY' 
+                ? '<span class="text-emerald-700 font-bold">BUY</span>' 
+                : '<span class="text-rose-600 font-bold">SELL</span>';
+
+            const chartImage = t.chartDataUrl || t.chartUrl;
+            const chartBtn = chartImage 
+                ? `<button onclick="viewChart('${t.id}')" title="View Chart" class="text-[#2271b1] hover:underline font-bold">
+                    <i class="fa-solid fa-image"></i>
+                   </button>`
+                : '<span class="text-gray-300">-</span>';
+
+            const pnlNum = parseFloat(t.pnl) || 0;
+            const pnlClass = pnlNum > 0 ? 'text-emerald-700 font-bold' : (pnlNum < 0 ? 'text-rose-600 font-bold' : 'text-gray-700');
+
+            return `
+                <tr class="hover:bg-[#f6f7f7] border-b border-[#c3c4c7]">
+                    <td class="py-2.5 px-3 text-gray-700 font-sans">${dateFormatted}</td>
+                    <td class="py-2.5 px-3 font-bold text-[#1d2327] font-sans">${t.pair || '-'} ${outcomeBadge}</td>
+                    <td class="py-2.5 px-3 font-sans">${sideBadge}</td>
+                    <td class="py-2.5 px-3 text-gray-600 font-sans">${t.session || '-'}</td>
+                    <td class="py-2.5 px-3 font-sans"><span class="bg-[#f0f0f1] text-[#2c3338] px-1.5 py-0.5 rounded text-[10px] border border-[#c3c4c7]">${t.strategy || '-'}</span></td>
+                    <td class="py-2.5 px-3 text-gray-600">${t.entry || '-'} / ${t.sl || '-'} / ${t.tp || '-'}</td>
+                    <td class="py-2.5 px-3 font-bold text-amber-700">1:${t.rr || '0.00'}</td>
+                    <td class="py-2.5 px-3 text-gray-700">$${(parseFloat(t.risk) || 0).toFixed(2)}</td>
+                    <td class="py-2.5 px-3 text-gray-500">$${(parseFloat(t.commission) || 0).toFixed(2)}</td>
+                    <td class="py-2.5 px-3 ${pnlClass}">${pnlNum >= 0 ? '+' : ''}${formatCurrency(pnlNum)}</td>
+                    <td class="py-2.5 px-3 text-center">${chartBtn}</td>
+                </tr>
+            `;
+        }
+
+        function calcFormMetrics() {
+            const entry = parseFloat(document.getElementById('tradeEntry').value) || 0;
+            const sl = parseFloat(document.getElementById('tradeSL').value) || 0;
+            const tp = parseFloat(document.getElementById('tradeTP').value) || 0;
+            const risk = parseFloat(document.getElementById('tradeRisk').value) || 0;
+            const comm = parseFloat(document.getElementById('tradeCommission').value) || 0;
+            const outcome = document.getElementById('tradeOutcome').value;
+
+            let rr = 0;
+            let estPnL = 0;
+
+            if (entry > 0 && sl > 0 && tp > 0) {
+                const riskDistance = Math.abs(entry - sl);
+                const rewardDistance = Math.abs(tp - entry);
+                if (riskDistance > 0) rr = rewardDistance / riskDistance;
+            }
+
+            if (outcome === 'Win') estPnL = (risk * rr) - comm;
+            else if (outcome === 'Loss') estPnL = (-risk) - comm;
+            else if (outcome === 'Break-Even') estPnL = -comm;
+
+            document.getElementById('previewRR').textContent = `1 : ${rr.toFixed(2)}`;
+            const pnlElem = document.getElementById('previewPnL');
+            pnlElem.textContent = `${estPnL >= 0 ? '+' : ''}${formatCurrency(estPnL)}`;
+            pnlElem.className = `text-base font-bold font-mono ${estPnL > 0 ? 'text-emerald-700' : (estPnL < 0 ? 'text-rose-600' : 'text-gray-700')}`;
+        }
+
+        function handleTradeSubmit(e) {
+            e.preventDefault();
+            const tradeId = document.getElementById('tradeId').value;
+            
+            const entry = parseFloat(document.getElementById('tradeEntry').value) || 0;
+            const sl = parseFloat(document.getElementById('tradeSL').value) || 0;
+            const tp = parseFloat(document.getElementById('tradeTP').value) || 0;
+            const risk = parseFloat(document.getElementById('tradeRisk').value) || 0;
+            const comm = parseFloat(document.getElementById('tradeCommission').value) || 0;
+            const outcome = document.getElementById('tradeOutcome').value;
+
+            let rr = 0;
+            if (entry > 0 && sl > 0 && tp > 0) {
+                const riskDistance = Math.abs(entry - sl);
+                const rewardDistance = Math.abs(tp - entry);
+                if (riskDistance > 0) rr = rewardDistance / riskDistance;
+            }
+
+            let pnl = 0;
+            if (outcome === 'Win') pnl = (risk * rr) - comm;
+            else if (outcome === 'Loss') pnl = (-risk) - comm;
+            else if (outcome === 'Break-Even') pnl = -comm;
+
+            const tradeObj = {
+                id: tradeId || ('t_' + Date.now()),
+                datetime: document.getElementById('tradeDateTime').value,
+                pair: document.getElementById('tradePair').value,
+                session: document.getElementById('tradeSession').value,
+                direction: document.getElementById('tradeDirection').value,
+                strategy: document.getElementById('tradeStrategy').value,
+                outcome: outcome,
+                entry: entry,
+                sl: sl,
+                tp: tp,
+                risk: risk,
+                commission: comm,
+                rr: (typeof rr === 'number' ? rr : parseFloat(rr)).toFixed(2),
+                pnl: pnl,
+                notes: document.getElementById('tradeNotes').value,
+                chartUrl: document.getElementById('tradeChartUrl').value,
+                chartDataUrl: document.getElementById('tradeChartDataUrl').value
+            };
+
+            if (tradeId) {
+                const index = trades.findIndex(t => t.id === tradeId);
+                if (index !== -1) trades[index] = tradeObj;
+                showToast('Trade updated successfully');
+            } else {
+                trades.unshift(tradeObj);
+                showToast('New trade logged');
+            }
+
+            saveTradesToStorage();
+            closeTradeModal();
+            renderAll();
+            pushSingleTradeToCloud(tradeObj);
+        }
+
+        function editTrade(id) {
+            const t = trades.find(item => item.id === id);
+            if (!t) return;
+
+            document.getElementById('tradeId').value = t.id;
+            document.getElementById('modalTitle').textContent = 'Edit Trade';
+            document.getElementById('tradeDateTime').value = t.datetime || '';
+            document.getElementById('tradePair').value = t.pair || 'XAU/USD';
+            document.getElementById('tradeSession').value = t.session || 'London';
+            document.getElementById('tradeDirection').value = t.direction || 'BUY';
+            document.getElementById('tradeStrategy').value = t.strategy || 'TJL 1';
+            document.getElementById('tradeOutcome').value = t.outcome || 'Win';
+            document.getElementById('tradeEntry').value = t.entry || '';
+            document.getElementById('tradeSL').value = t.sl || '';
+            document.getElementById('tradeTP').value = t.tp || '';
+            document.getElementById('tradeRisk').value = t.risk || '';
+            document.getElementById('tradeCommission').value = t.commission || 0;
+            document.getElementById('tradeNotes').value = t.notes || '';
+            document.getElementById('tradeChartUrl').value = t.chartUrl || '';
+            document.getElementById('tradeChartDataUrl').value = t.chartDataUrl || '';
+
+            calcFormMetrics();
+            document.getElementById('tradeModal').classList.remove('hidden');
+        }
+
+        function confirmDeleteTrade(id) {
+            showCustomConfirm('Delete Trade', 'Are you sure you want to delete this trade log?', (confirmed) => {
+                if (confirmed) {
+                    trades = trades.filter(t => t.id !== id);
+                    saveTradesToStorage();
+                    renderAll();
+                    showToast('Trade deleted', 'info');
+                    deleteTradeFromCloud(id);
+                }
+            });
+        }
+
+        function viewChart(id) {
+            const t = trades.find(item => item.id === id);
+            if (!t) return;
+            const chartSrc = t.chartDataUrl || t.chartUrl;
+            if (!chartSrc) return;
+
+            if (t.chartUrl && !t.chartDataUrl) {
+                window.open(t.chartUrl, '_blank');
+            } else {
+                const modal = document.getElementById('chartPreviewModal');
+                const img = document.getElementById('chartPreviewImage');
+                img.src = chartSrc;
+                modal.classList.remove('hidden');
+            }
+        }
+
+        function closeChartPreviewModal() {
+            document.getElementById('chartPreviewModal').classList.add('hidden');
+        }
+
+        function openWithdrawModal(editId = null) {
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            
+            if (editId) {
+                const w = withdrawals.find(item => item.id === editId);
+                if (w) {
+                    document.getElementById('withdrawId').value = w.id;
+                    document.getElementById('withdrawModalTitle').textContent = 'Edit Withdrawal';
+                    document.getElementById('withdrawDateTime').value = w.datetime || now.toISOString().slice(0, 16);
+                    document.getElementById('withdrawAmount').value = w.amount || '';
+                    document.getElementById('withdrawNote').value = w.note || '';
+                }
+            } else {
+                document.getElementById('withdrawId').value = '';
+                document.getElementById('withdrawModalTitle').textContent = 'Record Withdrawal';
+                document.getElementById('withdrawDateTime').value = now.toISOString().slice(0, 16);
+                document.getElementById('withdrawAmount').value = '';
+                document.getElementById('withdrawNote').value = '';
+            }
+            
+            document.getElementById('withdrawModal').classList.remove('hidden');
+        }
+
+        function closeWithdrawModal() {
+            document.getElementById('withdrawModal').classList.add('hidden');
+        }
+
+        function handleWithdrawSubmit(e) {
+            e.preventDefault();
+            const withdrawId = document.getElementById('withdrawId').value;
+            const datetime = document.getElementById('withdrawDateTime').value;
+            const amount = parseFloat(document.getElementById('withdrawAmount').value) || 0;
+            const note = document.getElementById('withdrawNote').value;
+
+            if (amount <= 0) return;
+
+            let withdrawalObj = { id: withdrawId || ('w_' + Date.now()), datetime, amount, note };
+
+            if (withdrawId) {
+                const idx = withdrawals.findIndex(w => w.id === withdrawId);
+                if (idx !== -1) {
+                    withdrawals[idx] = withdrawalObj;
+                    showToast('Withdrawal updated', 'info');
+                }
+            } else {
+                withdrawals.push(withdrawalObj);
+                showToast(`Payout of $${amount.toFixed(2)} recorded!`, 'info');
+            }
+
+            saveWithdrawalsToStorage();
+            closeWithdrawModal();
+            renderAll();
+            pushWithdrawalToCloud(withdrawalObj);
+        }
+
+        function openWithdrawListModal() {
+            const container = document.getElementById('withdrawListContainer');
+            if (withdrawals.length === 0) {
+                container.innerHTML = '<div class="p-4 text-center text-xs text-gray-500 font-sans">No withdrawals recorded yet.</div>';
+            } else {
+                const sorted = [...withdrawals].sort((a, b) => new Date(b.datetime) - new Date(a.datetime));
+                container.innerHTML = sorted.map(w => {
+                    const dateStr = new Date(w.datetime).toLocaleString([], { month: 'short', day: 'numeric', year: 'numeric' });
+                    return `
+                        <div class="p-2.5 bg-[#f6f7f7] border border-[#c3c4c7] rounded flex items-center justify-between text-xs">
+                            <div>
+                                <div class="font-bold text-blue-700">-${formatCurrency(w.amount)}</div>
+                                <div class="text-[10px] text-gray-500 font-sans">${dateStr} ${w.note ? '&bull; ' + w.note : ''}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            document.getElementById('withdrawListModal').classList.remove('hidden');
+        }
+
+        function closeWithdrawListModal() {
+            document.getElementById('withdrawListModal').classList.add('hidden');
+        }
+
+        function confirmDeleteWithdrawal(id) {
+            showCustomConfirm('Delete Withdrawal', 'Are you sure you want to delete this payout record?', (confirmed) => {
+                if (confirmed) {
+                    withdrawals = withdrawals.filter(w => w.id !== id);
+                    saveWithdrawalsToStorage();
+                    renderAll();
+                    openWithdrawListModal();
+                    showToast('Withdrawal deleted', 'info');
+                    deleteWithdrawalFromCloud(id);
+                }
+            });
+        }
+
+        function saveWithdrawalsToStorage() {
+            localStorage.setItem('etherealneel_withdrawals', JSON.stringify(withdrawals));
+        }
+
+        function saveTradesToStorage() {
+            localStorage.setItem('etherealneel_trades', JSON.stringify(trades));
+        }
+
+        function openTradeModal() {
+            document.getElementById('tradeForm').reset();
+            document.getElementById('tradeId').value = '';
+            document.getElementById('tradeChartDataUrl').value = '';
+            document.getElementById('modalTitle').textContent = 'Log Trade Execution';
+            
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('tradeDateTime').value = now.toISOString().slice(0, 16);
+            
+            calcFormMetrics();
+            document.getElementById('tradeModal').classList.remove('hidden');
+        }
+
+        function closeTradeModal() {
+            document.getElementById('tradeModal').classList.add('hidden');
+        }
+
+        function openSettingsModal() {
+            document.getElementById('settingStartBalance').value = startingBalance;
+            document.getElementById('settingsModal').classList.remove('hidden');
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('settingsModal').classList.add('hidden');
+        }
+
+        function saveSettings(e) {
+            e.preventDefault();
+            startingBalance = parseFloat(document.getElementById('settingStartBalance').value) || 1000.00;
+
+            localStorage.setItem('etherealneel_start_balance', startingBalance);
+
+            applySettings();
+            updateCloudBadgeStatus();
+            closeSettingsModal();
+            renderAll();
+            showToast('Settings saved');
+
+            if (cloudAppUrl) {
+                manualSyncCloud();
+            }
+        }
+
+        function promptEditBalance() {
+            showCustomPrompt('Starting Account Balance ($):', (val) => {
+                if (val !== null && !isNaN(parseFloat(val))) {
+                    startingBalance = parseFloat(val);
+                    localStorage.setItem('etherealneel_start_balance', startingBalance);
+                    applySettings();
+                    renderAll();
+                    showToast('Starting balance updated');
+                    pushFullSyncToCloud();
+                }
+            }, startingBalance);
+        }
+
+        function formatCurrency(val) {
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
+        }
+
+        function showCustomConfirm(title, message, callback) {
+            document.getElementById('confirmTitle').textContent = title;
+            document.getElementById('confirmMessage').textContent = message;
+            document.getElementById('confirmInputContainer').classList.add('hidden');
+            activeConfirmCallback = callback;
+            document.getElementById('confirmModal').classList.remove('hidden');
+        }
+
+        function showCustomPrompt(message, callback, defaultValue = '') {
+            document.getElementById('confirmTitle').textContent = 'Input Required';
+            document.getElementById('confirmMessage').textContent = message;
+            const inputContainer = document.getElementById('confirmInputContainer');
+            const input = document.getElementById('confirmInput');
+            inputContainer.classList.remove('hidden');
+            input.value = defaultValue;
+            activeConfirmCallback = (confirmed) => {
+                callback(confirmed ? input.value : null);
+            };
+            document.getElementById('confirmModal').classList.remove('hidden');
+        }
+
+        function closeConfirmModal(result) {
+            document.getElementById('confirmModal').classList.add('hidden');
+            if (activeConfirmCallback) {
+                activeConfirmCallback(result);
+                activeConfirmCallback = null;
+            }
+        }
+
+        function exportTradesCSV() {
+            if (trades.length === 0) {
+                showToast('No trade logs available to export.', 'info');
+                return;
+            }
+            const headers = ['ID', 'DateTime', 'Pair', 'Direction', 'Session', 'Strategy', 'Outcome', 'Entry', 'SL', 'TP', 'Risk', 'Commission', 'RR', 'PnL', 'Notes', 'ChartUrl'];
+            const rows = trades.map(t => [
+                t.id, t.datetime, t.pair, t.direction, t.session, t.strategy, t.outcome,
+                t.entry, t.sl, t.tp, t.risk, t.commission, t.rr, t.pnl, `"${(t.notes || '').replace(/"/g, '""')}"`, t.chartUrl || ''
+            ]);
+
+            const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement('a');
+            link.setAttribute('href', encodedUri);
+            link.setAttribute('download', `trades_${new Date().toISOString().slice(0, 10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast('Trades exported to CSV');
+        }
+
+        function exportFullJSON() {
+            const data = { trades, withdrawals, startingBalance, faviconUrl };
+            const jsonStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
+            const link = document.createElement('a');
+            link.setAttribute('href', jsonStr);
+            link.setAttribute('download', `journal_backup_${new Date().toISOString().slice(0, 10)}.json`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast('Full JSON backup generated');
+        }
+
+        function triggerImportJSON() {
+            document.getElementById('importFileInput').click();
+        }
+
+        function handleFileImport(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const imported = JSON.parse(evt.target.result);
+                    if (imported.trades && Array.isArray(imported.trades)) {
+                        trades = imported.trades;
+                        withdrawals = imported.withdrawals || [];
+                        if (imported.startingBalance) startingBalance = parseFloat(imported.startingBalance);
+                        saveTradesToStorage();
+                        saveWithdrawalsToStorage();
+                        localStorage.setItem('etherealneel_start_balance', startingBalance);
+                        applySettings();
+                        renderAll();
+                        showToast('Data imported successfully!');
+                        pushFullSyncToCloud();
+                    }
+                } catch(err) {
+                    showToast('Invalid JSON structure.', 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function promptResetJournal() {
+            showCustomConfirm('Reset All Data', 'Are you sure you want to reset all trades and withdrawals? This cannot be undone.', (confirmed) => {
+                if (confirmed) {
+                    trades = [];
+                    withdrawals = [];
+                    saveTradesToStorage();
+                    saveWithdrawalsToStorage();
+                    renderAll();
+                    showToast('Journal reset complete', 'info');
+                    pushFullSyncToCloud();
+                }
+            });
+        }
+
+        function handleImageFileUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                document.getElementById('tradeChartDataUrl').value = evt.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function updateCloudBadgeStatus(state = 'local') {
+            const badge = document.getElementById('cloudStatusBadge');
+            const btnIcon = document.getElementById('cloudSyncBtnIcon');
+            if (!badge) return;
+
+            if (state === 'syncing') {
+                badge.className = 'inline-flex items-center gap-1 text-[11px] font-medium text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200';
+                badge.innerHTML = `<i class="fa-solid fa-arrows-rotate fa-spin"></i> Syncing...`;
+                if (btnIcon) btnIcon.className = 'fa-solid fa-arrows-rotate fa-spin text-blue-600';
+            } else if (state === 'connected' || (cloudAppUrl && state === 'local')) {
+                badge.className = 'inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200';
+                badge.innerHTML = `<i class="fa-solid fa-cloud-check"></i> Connected`;
+                if (btnIcon) btnIcon.className = 'fa-solid fa-rotate text-emerald-600';
+            } else if (state === 'error') {
+                badge.className = 'inline-flex items-center gap-1 text-[11px] font-medium text-rose-700 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200';
+                badge.innerHTML = `<i class="fa-solid fa-cloud-exclamation"></i> Sync Error`;
+                if (btnIcon) btnIcon.className = 'fa-solid fa-triangle-exclamation text-rose-600';
+            } else {
+                badge.className = 'inline-flex items-center gap-1 text-[11px] font-medium text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200';
+                badge.innerHTML = `<i class="fa-solid fa-cloud"></i> Local Storage`;
+                if (btnIcon) btnIcon.className = 'fa-solid fa-rotate text-gray-500';
+            }
+        }
+
+        // Send API request to Google Apps Script Web App
+        async function sendCloudRequest(payload) {
+            if (!cloudAppUrl) return null;
+            updateCloudBadgeStatus('syncing');
+
+            try {
+                const res = await fetch(cloudAppUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await res.json();
+                
+                if (result && result.status === 'success') {
+                    updateCloudBadgeStatus('connected');
+                    return result;
+                } else {
+                    throw new Error(result.message || 'Server error');
+                }
+            } catch (err) {
+                console.error('Google Sheets Sync Error:', err);
+                updateCloudBadgeStatus('error');
+                return null;
+            }
+        }
+
+        async function manualSyncCloud() {
+            if (!cloudAppUrl) {
+                showToast('Cloud Web App URL is not configured.', 'error');
+                return;
+            }
+            showToast('Syncing with Google Sheet...', 'info');
+            await pushFullSyncToCloud();
+        }
+
+        async function pushFullSyncToCloud() {
+            if (!cloudAppUrl) return;
+            const payload = {
+                action: 'SYNC_ALL',
+                trades: trades,
+                withdrawals: withdrawals,
+                startingBalance: startingBalance
+            };
+            const result = await sendCloudRequest(payload);
+            if (result) {
+                showToast('Synced to Google Sheets!');
+            }
+        }
+
+        async function pullFromCloud(silent = false) {
+            if (!cloudAppUrl) return;
+            updateCloudBadgeStatus('syncing');
+
+            try {
+                const res = await fetch(`${cloudAppUrl}?action=GET_ALL`);
+                const result = await res.json();
+
+                if (result && result.status === 'success' && result.data) {
+                    trades = result.data.trades || trades;
+                    withdrawals = result.data.withdrawals || withdrawals;
+                    if (result.data.startingBalance) startingBalance = parseFloat(result.data.startingBalance);
+
+                    saveTradesToStorage();
+                    saveWithdrawalsToStorage();
+                    localStorage.setItem('etherealneel_start_balance', startingBalance);
+
+                    applySettings();
+                    renderAll();
+                    updateCloudBadgeStatus('connected');
+                    if (!silent) showToast('Data loaded from Google Sheets!');
+                }
+            } catch (err) {
+                console.error('Cloud pull failed:', err);
+                updateCloudBadgeStatus('error');
+                if (!silent) showToast('Failed to pull from Cloud.', 'error');
+            }
+        }
+
+        async function pushSingleTradeToCloud(trade) {
+            if (!cloudAppUrl) return;
+            await sendCloudRequest({ action: 'SAVE_TRADE', trade });
+        }
+
+        async function deleteTradeFromCloud(id) {
+            if (!cloudAppUrl) return;
+            await sendCloudRequest({ action: 'DELETE_TRADE', id });
+        }
+
+        async function pushWithdrawalToCloud(withdrawal) {
+            if (!cloudAppUrl) return;
+            await sendCloudRequest({ action: 'SAVE_WITHDRAWAL', withdrawal });
+        }
+
+        async function deleteWithdrawalFromCloud(id) {
+            if (!cloudAppUrl) return;
+            await sendCloudRequest({ action: 'DELETE_WITHDRAWAL', id });
+        }
+    </script>
+</body>
+</html>
